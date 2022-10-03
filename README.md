@@ -68,6 +68,7 @@ Instead of storing the _implementation address at the proxy’s first storage sl
 |address _implementation   |                         | <=== Randomized slot.
 |...                       |                         |
 |...                       |                         |
+
 An example of how the randomized storage is achieved, following [EIP 1967](https://eips.ethereum.org/EIPS/eip-1967):
 ```
 bytes32 private constant implementationPosition = bytes32(uint256(
@@ -88,6 +89,7 @@ Incorrect storage preservation:
 |uint256 _supply     |mapping _balances        |
 |...                 |uint256 _supply          |
 |                    |...                      |
+
 Correct storage preservation:
 
 |Implementation_v0   |Implementation_v1        |
@@ -97,8 +99,51 @@ Correct storage preservation:
 |uint256 _supply     |uint256 _supply          |
 |...                 |address _lastContributor | <=== Storage extension.
 |                    |...                      |
+
 The unstructured storage proxy mechanism doesn’t safeguard against this situation. It is up to the user to have new versions of a logic contract extend previous versions, or otherwise guarantee that the storage hierarchy is always appended to but not modified. However, OpenZeppelin Upgrades detects such collisions and warns the developer appropriately.
 
+## [Transparent](https://blog.openzeppelin.com/the-transparent-proxy-pattern/) vs [UUPS Proxies](https://eips.ethereum.org/EIPS/eip-1822)
+
+There are two alternative ways to add upgradeability to an ERC1967 proxy.
+
+The original proxies included in OpenZeppelin followed the Transparent Proxy Pattern. While this pattern is still provided, our recommendation is now shifting towards UUPS proxies, which are both lightweight and versatile. The name UUPS comes from EIP1822, which first documented the pattern.
+
+While both of these share the same interface for upgrades, in UUPS proxies the upgrade is handled by the implementation, and can eventually be removed. Transparent proxies, on the other hand, include the upgrade and admin logic in the proxy itself. This means TransparentUpgradeableProxy is more expensive to deploy than what is possible with UUPS proxies.
+
+UUPS proxies are implemented using an ERC1967Proxy. Note that this proxy is not by itself upgradeable. It is the role of the implementation to include, alongside the contract’s logic, all the code necessary to update the implementation’s address that is stored at a specific slot in the proxy’s storage space. This is where the UUPSUpgradeable contract comes in. Inheriting from it (and overriding the _authorizeUpgrade function with the relevant access control mechanism) will turn your contract into a UUPS compliant implementation.
+
+Note that since both proxies use the same storage slot for the implementation address, using a UUPS compliant implementation with a TransparentUpgradeableProxy might allow non-admins to perform upgrade operations.
+
+By default, the upgrade functionality included in UUPSUpgradeable contains a security mechanism that will prevent any upgrades to a non UUPS compliant implementation. This prevents upgrades to an implementation contract that wouldn’t contain the necessary upgrade mechanism, as it would lock the upgradeability of the proxy forever. This security mechanism can be bypassed by either of:
+
+Adding a flag mechanism in the implementation that will disable the upgrade function when triggered.
+
+Upgrading to an implementation that features an upgrade mechanism without the additional security check, and then upgrading again to another implementation without the upgrade mechanism.
+
+The current implementation of this security mechanism uses EIP1822 to detect the storage slot used by the implementation. A previous implementation, now deprecated, relied on a rollback check. It is possible to upgrade from a contract using the old mechanism to a new one. The inverse is however not possible, as old implementations (before version 4.5) did not include the ERC1822 interface.
+
+
+## Transparent Upgradeable Proxy
+
+This contract implements a proxy that is upgradeable by an admin.
+
+To avoid proxy selector clashing, which can potentially be used in an attack, this contract uses the transparent proxy pattern. This pattern implies two things that go hand in hand:
+
+If any account other than the admin calls the proxy, the call will be forwarded to the implementation, even if that call matches one of the admin functions exposed by the proxy itself.
+
+If the admin calls the proxy, it can access the admin functions, but its calls will never be forwarded to the implementation. If the admin tries to call a function on the implementation it will fail with an error that says "admin cannot fallback to proxy target".
+
+These properties mean that the admin account can only be used for admin actions like upgrading the proxy or changing the admin, so it’s best if it’s a dedicated account that is not used for anything else. This will avoid headaches due to sudden errors when trying to call a function from the proxy implementation.
+
+Our recommendation is for the dedicated account to be an instance of the ProxyAdmin contract. If set up this way, you should think of the ProxyAdmin instance as the real administrative interface of your proxy.
+
+|Msg.sender       |owner()                |upgradeto()                |transfer()               |
+|-----------------|-----------------------|---------------------------|-------------------------|
+|Owner            |returns proxy.owner()  |returns proxy.upgradeTo()  |fails                    |
+|Other            |returns erc20.owner()  |fails                      |returns erc20.transfer() |
+
+
 ## Source
-[Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)
-[Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)
+[Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)  
+[Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)  
+[Openzepellin blog](https://blog.openzeppelin.com/the-transparent-proxy-pattern/)  
