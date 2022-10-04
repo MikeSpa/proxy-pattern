@@ -143,6 +143,16 @@ Our recommendation is for the dedicated account to be an instance of the ProxyAd
 |Other            |returns erc20.owner()  |fails                      |returns erc20.transfer() |
 
 
+## Universal Upgradeable Proxy Standard (UUPS)
+
+delegatecall() - Function in contract A which allows an external contract B (delegating) to modify A’s storage (see diagram below, Solidity docs)
+Proxy Contract - The contract A which stores data, but uses the logic of external contract B by way of delegatecall().
+Logic Contract - The contract B which contains the logic used by Proxy Contract A
+Proxiable Contract - Inherited in Logic Contract B to provide the upgrade functionality
+
+In UUPS proxies the upgrade is handled by the implementation, and can eventually be removed.  
+UUPS proxies are implemented using an ERC1967Proxy 91. Note that this proxy is not by itself upgradeable. It is the role of the implementation to include, alongside the contract's logic, all the code necessary to update the implementation's address that is stored at a specific slot in the proxy's storage space. This is where the UUPSUpgradeable 102 contract comes in. Inheriting from it (and overriding the _authorizeUpgrade 26 function with the relevant access control mechanism) will turn your contract into a UUPS compliant implementation.
+
 ## Source
 [Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)  
 [Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)  
