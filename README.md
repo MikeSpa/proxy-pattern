@@ -187,7 +187,19 @@ Another difference between a constructor and a regular function is that Solidity
 
 Solidity allows defining initial values for fields when declaring them in a contract.  
 This is equivalent to setting these values in the constructor, and as such, will not work for upgradeable contracts.
+
+## Potentially Unsafe Operations
+When working with upgradeable smart contracts, you will always interact with the contract instance, and never with the underlying logic contract. However, nothing prevents a malicious actor from sending transactions to the logic contract directly. This does not pose a threat, since any changes to the state of the logic contracts do not affect your contract instances, as the storage of the logic contracts is never used in your project.
+
+There is, however, an exception. If the direct call to the logic contract triggers a selfdestruct operation, then the logic contract will be destroyed, and all your contract instances will end up delegating all calls to an address without any code. This would effectively break all contract instances in your project.
+
+A similar effect can be achieved if the logic contract contains a delegatecall operation. If the contract can be made to delegatecall into a malicious contract that contains a selfdestruct, then the calling contract will be destroyed.
+
+As such, it is not allowed to use either selfdestruct or delegatecall in your contracts.
+
+
 ## Source
 [Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)  
 [Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)  
 [Openzepellin blog](https://blog.openzeppelin.com/the-transparent-proxy-pattern/)  
+[Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable)
