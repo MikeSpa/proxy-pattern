@@ -4,10 +4,10 @@
 
 pragma solidity ^0.8.2;
 
-import "../beacon/IBeacon.sol";
-import "../../interfaces/draft-IERC1822.sol";
-import "../../utils/Address.sol";
-import "../../utils/StorageSlot.sol";
+import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
+import "./interfaces/draft-IERC1822.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import "@openzeppelin/contracts/utils/StorageSlot.sol";
 
 /**
  * @dev This abstract contract provides getters and event emitting update functions for
