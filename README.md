@@ -153,6 +153,40 @@ Proxiable Contract - Inherited in Logic Contract B to provide the upgrade functi
 In UUPS proxies the upgrade is handled by the implementation, and can eventually be removed.  
 UUPS proxies are implemented using an ERC1967Proxy 91. Note that this proxy is not by itself upgradeable. It is the role of the implementation to include, alongside the contract's logic, all the code necessary to update the implementation's address that is stored at a specific slot in the proxy's storage space. This is where the UUPSUpgradeable 102 contract comes in. Inheriting from it (and overriding the _authorizeUpgrade 26 function with the relevant access control mechanism) will turn your contract into a UUPS compliant implementation.
 
+
+## Initializable
+
+In Solidity, code that is inside a constructor or part of a global variable declaration is not part of a deployed contract’s runtime bytecode. This code is executed only once, when the contract instance is deployed. As a consequence of this, the code within a logic contract’s constructor will never be executed in the context of the proxy’s state. To rephrase, proxies are completely oblivious to the existence of constructors. It’s simply as if they weren’t there for the proxy.
+
+The problem is easily solved though. Logic contracts should move the code within the constructor to a regular 'initializer' function, and have this function be called whenever the proxy links to this logic contract. Special care needs to be taken with this initializer function so that it can only be called once, which is one of the properties of constructors in general programming.
+
+This is why when we create a proxy using OpenZeppelin Upgrades, you can provide the name of the initializer function and pass parameters.
+
+To ensure that the `initialize` function can only be called once, a simple modifier is used. OpenZeppelin Upgrades provides this functionality via a contract that can be extended:
+
+```js
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.6.0;
+
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+contract MyContract is Initializable {
+    function initialize(
+        address arg1,
+        uint256 arg2,
+        bytes memory arg3
+    ) public payable initializer {
+        // "constructor" code...
+    }
+}
+```
+The contract extends `Initializable` and implements the `initializer` modifier provided by it.
+
+Another difference between a constructor and a regular function is that Solidity takes care of automatically invoking the constructors of all ancestors of a contract. When writing an initializer, you need to take special care to manually call the initializers of all parent contracts.
+
+
+Solidity allows defining initial values for fields when declaring them in a contract.  
+This is equivalent to setting these values in the constructor, and as such, will not work for upgradeable contracts.
 ## Source
 [Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)  
 [Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)  
