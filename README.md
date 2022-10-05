@@ -198,7 +198,7 @@ A similar effect can be achieved if the logic contract contains a delegatecall o
 As such, it is not allowed to use either selfdestruct or delegatecall in your contracts.
 
 
-## Source
+## Sources
 [Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)  
 [Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)  
 [Openzepellin blog](https://blog.openzeppelin.com/the-transparent-proxy-pattern/)  
