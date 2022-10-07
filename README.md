@@ -4,7 +4,7 @@ Implementation of the various proxy pattern in solidity
 
 ## TODO
 
-- [ ] Write test for Transparent and UUPS
+- [ ] Write test for UUPS
 - [ ] add initialisation during upgrade
 - [ ] Beacon
 
