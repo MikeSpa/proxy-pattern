@@ -1,3 +1,13 @@
+# Repo
+
+Implementation of the various proxy pattern in solidity
+
+## TODO
+
+- [ ] Write test for Transparent and UUPS
+- [ ] add initialisation during upgrade
+- [ ] Beacon
+
 # Proxy Pattern
 
 ## Idea
