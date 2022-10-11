@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.2;
 
-import "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
+import "./interfaces/IBeacon.sol";
 import "./interfaces/draft-IERC1822.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/utils/StorageSlot.sol";

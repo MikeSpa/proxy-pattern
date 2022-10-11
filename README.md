@@ -4,9 +4,9 @@ Implementation of the various proxy pattern in solidity
 
 ## TODO
 
-- [ ] Write test for UUPS
+- [ ] Write test for UUPS and beacon
 - [ ] add initialisation during upgrade
-- [ ] Beacon
+- [x] Beacon
 
 # Proxy Pattern
 
@@ -197,6 +197,18 @@ Another difference between a constructor and a regular function is that Solidity
 
 Solidity allows defining initial values for fields when declaring them in a contract.  
 This is equivalent to setting these values in the constructor, and as such, will not work for upgradeable contracts.
+
+
+## Beacon Proxy
+
+A different family of proxies are beacon proxies. This pattern, popularized by Dharma, allows multiple proxies to be upgraded to a different implementation in a single transaction.
+
+BeaconProxy: A proxy that retrieves its implementation from a beacon contract.
+
+UpgradeableBeacon: A beacon contract with a built in admin that can upgrade the BeaconProxy pointing to it.
+
+In this pattern, the proxy contract doesn’t hold the implementation address in storage like an ERC1967 proxy, instead the address is stored in a separate beacon contract. The upgrade operations that are sent to the beacon instead of to the proxy contract, and all proxies that follow that beacon are automatically upgraded.
+
 
 ## Potentially Unsafe Operations
 When working with upgradeable smart contracts, you will always interact with the contract instance, and never with the underlying logic contract. However, nothing prevents a malicious actor from sending transactions to the logic contract directly. This does not pose a threat, since any changes to the state of the logic contracts do not affect your contract instances, as the storage of the logic contracts is never used in your project.
