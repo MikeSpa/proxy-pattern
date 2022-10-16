@@ -9,13 +9,14 @@ from brownie import (
     ZERO_ADDRESS,
 )
 from scripts.helpful_scripts import get_account, encode_function_data
-
+from scripts.deploy_transparent_upgradeable_proxy import *
 
 # test that the proxy delegate the call to the implementation
 def test_proxy_delegates_calls():
     # Deploy
     account = get_account()
     logic_contract = LogicContractV1.deploy(
+        99,
         {"from": account},
     )
     proxy_admin = ProxyAdmin.deploy(
@@ -33,7 +34,6 @@ def test_proxy_delegates_calls():
     proxy_logic_contract = Contract.from_abi(
         "LogicContractV1", proxy.address, LogicContractV1.abi
     )
-    assert proxy_logic_contract.retrieve() == 0
     proxy_logic_contract.store(1, {"from": account})
     assert proxy_logic_contract.retrieve() == 1
     assert proxy_logic_contract.square(2, {"from": account}) != 4
@@ -44,6 +44,7 @@ def test_proxy_upgrades():
     # Deploy
     account = get_account()
     logic_contract = LogicContractV1.deploy(
+        99,
         {"from": account},
     )
     proxy_admin = ProxyAdmin.deploy(
@@ -85,32 +86,16 @@ def test_proxy_upgrades():
 
 
 # test that only the owner can call proxy function and owner cant call the implementation through the proxy
-# and selector clash are handle correctly
+# and selector clashes are handle correctly
 def test_proxy_selector_clashing():
-    account = get_account()
     user = get_account(2)
-    logic_contract = LogicContractV1.deploy(
-        {"from": account},
-    )
-    proxy_admin = ProxyAdmin.deploy(
-        {"from": account},
-    )
-    logic_contract_encoded_initializer_function = encode_function_data()
-    proxy = TransparentUpgradeableProxy.deploy(
-        logic_contract.address,
-        proxy_admin.address,
-        logic_contract_encoded_initializer_function,
-        {"from": account, "gas_limit": 1_000_000},
-    )
-    logic_contract_v2 = LogicContractV2.deploy(
-        {"from": account},
-    )
+
+    # Deploy everything and upgrade
+    proxy_admin, _, logic_contract_v2, proxy = deploy_and_upgrade_to_V2()
+
     proxy_logic_contract = Contract.from_abi(
         "LogicContractV2", proxy.address, LogicContractV2.abi
     )
-
-    # Upgrade
-    proxy_admin.upgrade(proxy.address, logic_contract_v2.address, {"from": account})
 
     # user shouldn't be able to call a function which belong to the proxy
     with reverts():
@@ -120,7 +105,7 @@ def test_proxy_selector_clashing():
     with reverts():
         proxy_logic_contract.retrieve({"from": proxy_admin})
 
-    # owner can still call the proxy directly, but will get the wrong storage
+    # owner can still call the implementation directly, but will get the wrong storage
     proxy_logic_contract.store(1, {"from": user})
     assert logic_contract_v2.retrieve({"from": proxy_admin}) == 0
     assert proxy_logic_contract.retrieve({"from": user}) == 1
@@ -130,3 +115,15 @@ def test_proxy_selector_clashing():
     assert proxy_logic_contract.admin({"from": user}) == ZERO_ADDRESS
     # admin calls TransparentUpradeableProxy.admin which return the admin of the proxy
     assert proxy_logic_contract.admin({"from": proxy_admin}) == proxy_admin
+
+
+# test that the values given in the constructor are not set in the proxy storage
+def test_constructor():
+
+    _, v1, proxy = deploy_proxy_V1()
+    proxy_logic_contract = Contract.from_abi(
+        "LogicContractV1", proxy.address, LogicContractV1.abi
+    )
+
+    assert v1.retrieve() == 99
+    assert proxy_logic_contract.retrieve() != 99

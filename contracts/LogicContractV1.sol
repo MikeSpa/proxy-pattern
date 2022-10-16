@@ -5,6 +5,11 @@ pragma solidity ^0.8.0;
 contract LogicContractV1 {
     uint256 private value;
 
+    //constructor are only call during deployment so the proxy will not get this initial value
+    constructor(uint256 _value) {
+        value = _value;
+    }
+
     // Stores a new value in the contract
     function store(uint256 _newValue) public {
         value = _newValue;

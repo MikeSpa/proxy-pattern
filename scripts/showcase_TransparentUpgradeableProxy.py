@@ -15,6 +15,7 @@ def deploy():
     print(f"Deploying to {network.show_active()}")
     # deploy the logic contract
     logic_contract = LogicContractV1.deploy(
+        99,
         {"from": account},
     )
     # deploy the ProxyAdmin and use that as the admin contract
@@ -23,9 +24,10 @@ def deploy():
     )
 
     # interaction with the logic contract directly
-    logic_contract.store(42, {"from": account})
     ret = logic_contract.retrieve()
-    print(f"Here is the initial value in the LogicContractV1: {ret}")
+    print(
+        f"Here is the initial value in the LogicContractV1: {ret}"
+    )  # from constructor
     print(f"Here is its square : {logic_contract.square(ret)}")
 
     # Dploying the proxy
@@ -41,11 +43,14 @@ def deploy():
     # now we want to call these function on the proxy
     # we assign the abi of logic_contract contract to proxy
     proxy = Contract.from_abi("LogicContractV1", proxy.address, LogicContractV1.abi)
-    print(f"Here is the initial value in the LogicContractV1: {proxy.retrieve()}")
+    print("Despite what we give to the constructor,")
+    print(
+        f"Here is the initial value in the proxy contract storage: {proxy.retrieve()}"
+    )
     store_tx = proxy.store(8, {"from": account})
     store_tx.wait(1)
     proxy_ret = proxy.retrieve()
-    print(f"The value in the LogicContractV1 is now: {proxy_ret}")
+    print(f"The value in the proxy is now: {proxy_ret}")
     print(f"Here is its square : {proxy.square(proxy_ret)}")
     print(
         f"The value on the logic contract storage has not changed: {logic_contract.retrieve()}"
@@ -64,9 +69,9 @@ def deploy():
     proxy_admin.upgrade(proxy.address, logic_contract_v2.address, {"from": account})
     # proxy = Contract.from_abi("LogicContractV2", proxy.address, LogicContractV2.abi)
     print(
-        f"The value in the LogicContractV2 is still: {proxy_ret}, since it was saved in the proxy storage"
+        f"The value in the proxy (that we get with the V2 retrieve()) is still: {proxy.retrieve()}, since it was saved in the proxy storage"
     )
-    print(f"Here is its square : {proxy.square(proxy_ret)}")
+    print(f"Here is its correct square : {proxy.square(proxy.retrieve())}")
 
 
 def main():
