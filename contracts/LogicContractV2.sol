@@ -19,4 +19,9 @@ contract LogicContractV2 {
     function square(uint256 _input) public pure returns (uint256) {
         return _input * _input;
     }
+
+    //new function whose fct selector clash with a functino from the Proxy
+    function admin() external pure returns (address) {
+        return address(0);
+    }
 }
