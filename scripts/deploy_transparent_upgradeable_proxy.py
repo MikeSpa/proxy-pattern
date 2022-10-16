@@ -49,6 +49,13 @@ def upgrade(proxy, new_implementation, proxy_admin):
     proxy_admin.upgrade(proxy.address, new_implementation.address, {"from": account})
 
 
+def upgrade_and_call(proxy, new_implementation, proxy_admin, initialize_data):
+    account = get_account()
+    proxy_admin.upgradeAndCall(
+        proxy.address, new_implementation.address, initialize_data, {"from": account}
+    )
+
+
 def deploy_proxy_V1():
     admin = deploy_proxy_admin()
     v1 = deploy_logic_contractV1()

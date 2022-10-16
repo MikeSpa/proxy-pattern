@@ -102,7 +102,7 @@ def test_proxy_selector_clashing():
         proxy.implementation({"from": user})
 
     # owner shouldn't be able to call a function which belong to the logic
-    with reverts():
+    with reverts("TransparentUpgradeableProxy: admin cannot fallback to proxy target"):
         proxy_logic_contract.retrieve({"from": proxy_admin})
 
     # owner can still call the implementation directly, but will get the wrong storage
@@ -127,3 +127,22 @@ def test_constructor():
 
     assert v1.retrieve() == 99
     assert proxy_logic_contract.retrieve() != 99
+
+
+# test the initialize function
+def test_initialize():
+    user = get_account(2)
+
+    admin, v1, proxy = deploy_proxy_V1()
+    proxy_logic_contract = Contract.from_abi(
+        "LogicContractV2", proxy.address, LogicContractV2.abi
+    )
+
+    v2 = deploy_logic_contractV2()
+    initialize_data = encode_function_data(v2.initialize, 33)
+    upgrade_and_call(proxy, v2, admin, initialize_data)
+
+    assert proxy_logic_contract.retrieve() == 33
+
+    with reverts("Initializable: contract is already initialized"):
+        proxy_logic_contract.initialize(1, {"from": user})
