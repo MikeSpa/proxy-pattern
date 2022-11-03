@@ -4,10 +4,10 @@ Implementation of the various proxy pattern in solidity
 
 ## TODO
 
-- [ ] Write test for UUPS and beacon
+- [ ] Write test for UUPS and beacon, diamond
 - [ ] add initialisation during upgrade
-- [x] Beacon
-
+- [ ] add Diamond docs
+- [ ] Diamond: AppStorage, multilpe facet, upgrade data storage, kill upgradeability 
 # Proxy Pattern
 
 ## Idea
