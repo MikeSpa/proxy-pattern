@@ -209,6 +209,18 @@ UpgradeableBeacon: A beacon contract with a built in admin that can upgrade the 
 
 In this pattern, the proxy contract doesn’t hold the implementation address in storage like an ERC1967 proxy, instead the address is stored in a separate beacon contract. The upgrade operations that are sent to the beacon instead of to the proxy contract, and all proxies that follow that beacon are automatically upgraded.
 
+## Diamond
+
+This proposal standardizes diamonds, which are modular smart contract systems that can be upgraded/extended after deployment, and have virtually no size limit. More technically, a diamond is a contract with external functions that are supplied by contracts called facets. Facets are separate, independent contracts that can share internal functions, libraries, and state variables.  
+There are a number of different reasons to use diamonds. Here are some of them:
+
+A single address for unlimited contract functionality. Using a single address for contract functionality makes deployment, testing and integration with other smart contracts, software and user interfaces easier.
+Your contract exceeds the 24KB maximum contract size. You may have related functionality that it makes sense to keep in a single contract, or at a single contract address. A diamond does not have a max contract size.
+A diamond provides a way to organize contract code and data. You may want to build a contract system with a lot of functionality. A diamond provides a systematic way to isolate different functionality and connect them together and share data between them as needed in a gas-efficient way.
+A diamond provides a way to upgrade functionality. Upgradeable diamonds can be upgraded to add/replace/remove functionality. Because diamonds have no max contract size, there is no limit to the amount of functionality that can be added to diamonds over time. Diamonds can be upgraded without having to redeploy existing functionality. Parts of a diamond can be added/replaced/removed while leaving other parts alone.
+A diamond can be immutable. It is possible to deploy an immutable diamond or make an upgradeable diamond immutable at a later time.
+A diamond can reuse deployed contracts. Instead of deploying contracts to a blockchain, existing already deployed, onchain contracts can be used to create diamonds. Custom diamonds can be created from existing deployed contracts. This enables the creation of on-chain smart contract platforms and libraries.
+
 
 ## Potentially Unsafe Operations
 When working with upgradeable smart contracts, you will always interact with the contract instance, and never with the underlying logic contract. However, nothing prevents a malicious actor from sending transactions to the logic contract directly. This does not pose a threat, since any changes to the state of the logic contracts do not affect your contract instances, as the storage of the logic contracts is never used in your project.
@@ -224,4 +236,5 @@ As such, it is not allowed to use either selfdestruct or delegatecall in your co
 [Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/proxies)  
 [Openzepellin docs](https://docs.openzeppelin.com/contracts/4.x/api/proxy)  
 [Openzepellin blog](https://blog.openzeppelin.com/the-transparent-proxy-pattern/)  
-[Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable)
+[Openzepellin docs](https://docs.openzeppelin.com/upgrades-plugins/1.x/writing-upgradeable)  
+[EIP2535](https://eips.ethereum.org/EIPS/eip-2535)
