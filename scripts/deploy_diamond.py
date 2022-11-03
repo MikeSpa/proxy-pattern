@@ -36,13 +36,13 @@ def diamondCut(proxy, _diamondCut):
     proxy_diamond_cut_facet = Contract.from_abi(
         "DiamondCutFacet", proxy.address, DiamondCutFacet.abi
     )
-    proxy_diamond_cut_facet.diamondCut(
+    tx = proxy_diamond_cut_facet.diamondCut(
         _diamondCut,
         ZERO_ADDRESS,
         "",
         {"from": account, "gas_limit": 10_000_000},
     )
-    return proxy_diamond_cut_facet
+    return tx
 
 
 def main():
